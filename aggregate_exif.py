@@ -1,4 +1,7 @@
-import sys, os
+import sys
+import os
+from concurrent.futures import ProcessPoolExecutor
+
 import numpy
 from matplotlib import pyplot
 from PIL import Image
@@ -51,17 +54,15 @@ def dredge_jpegs(path):
 
 
 def main():
-    data = []
 
-    for jpeg in dredge_jpegs(sys.argv[-1]):
-        focal_length = get_focal_length(jpeg)
+    jpeg_files = dredge_jpegs(sys.argv[-1])
 
-        if focal_length:
-            data.append(focal_length)
+    with ProcessPoolExecutor() as executor:
+        focal_length_list = list(filter(None, executor.map(get_focal_length, jpeg_files)))
 
-    data = numpy.array(data, dtype='u2')
+    numpy_data = numpy.array(focal_length_list, dtype='u2')
 
-    pyplot.hist(data, bins=50)
+    pyplot.hist(numpy_data, bins=50)
     pyplot.show()
 
 
